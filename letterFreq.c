@@ -1,40 +1,43 @@
 #include<stdio.h>
 #include<ctype.h>
 
+#define GRAPHLEN 40;
+
 int main (void){
-	
-	int freq[26] = {0};
+
+	double freq[26] = {0};
 	int ch;
-	
+    double graphLen = 40;
+
 	while((ch = getchar()) != EOF){
 		if(isalpha(ch)){
 			freq[ (toupper(ch) - 65) ]++;
 			//printf("adding %c\n", ch);
 		}
-	}	
-	
+	}
+
 	int i = 0;
 	char letter = 'a';
-	int n;
+	double n;
 	int most = 0;
-	
+
 	while( i < 26 ){
 		if( freq[i] > freq[most]){
 			most = i;
 		}
 		i++;
 	}
-	
-	printf("most is %d at %d\n", most, freq[most]);
-	
-	double increment = freq[most]/40;
-	
+
+	printf("most frequent letter is %c with %.0f occurances\n", 'a' + most, freq[most]);
+
+	double increment = freq[most]/graphLen;
+
 	printf("increment is %f\n", increment);
-	
+
 	i = 0;
-	
+
 	while( i < 26 ){
-		printf("%c - %5d | ", letter, freq[i]);
+		printf("%c - %5.0f | ", letter, freq[i]);
 		for(n = 0; n < freq[i] ; (n = n + increment)){
 			printf("*");
 		}
@@ -42,6 +45,6 @@ int main (void){
 		letter++;
 		i++;
 	}
-	
+
 	return(0);
 }
