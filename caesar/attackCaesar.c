@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<ctype.h>
 
-#define ALPHALEN
+#define ALPHALEN 26
 
 int main(){
 
@@ -18,15 +18,16 @@ int main(){
     int i;
     int most = 0;
 
-    for( i = 0; i < 26; i++){
+    for( i = 0; i < ALPHALEN; i++){
         if( freq[i] > freq[most]){
             most = i;
         }
     }
 
     int rot = 'e' - 'a';
-    printf("rot = %d (4)\n", rot);
-    printf("most = %d\n", most);
+    rot  = (most - 4 + ALPHALEN) % ALPHALEN;
+
+    printf("rot = %d\n", rot);
 
     return 0;
 
