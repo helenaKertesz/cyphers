@@ -12,7 +12,6 @@ int main (void){
 	while((ch = getchar()) != EOF){
 		if(isalpha(ch)){
 			freq[ (toupper(ch) - 65) ]++;
-			//printf("adding %c\n", ch);
 		}
 	}
 
