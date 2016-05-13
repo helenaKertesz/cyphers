@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<ctype.h>
+#include<assert.h>
 #include"enigma.h"
 
 #define ALPHALEN    26
@@ -12,12 +13,16 @@
 int main(int argv, char * argc[]){
 
     State rotorSet = setup( argv, argc );
+    assert( rotorSet != NULL );
+    showState( rotorSet );
 
     char ch;
     while( (ch = getchar()) != EOF ){
-        if( isalpha(ch) )
-            ch = encode( ch, rotorSet );
-        printf("%c", ch);
+        if( isalpha(ch) ){
+            ch = encode( toupper(ch), rotorSet );
+            showState( rotorSet );
+        }
+        printf("%c\n", ch);
     }
 
     dropState( rotorSet );
