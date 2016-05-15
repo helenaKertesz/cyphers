@@ -14,15 +14,14 @@ int main(int argv, char * argc[]){
 
     State rotorSet = setup( argv, argc );
     assert( rotorSet != NULL );
-    showState( rotorSet );
+//    showState( rotorSet );
 
     char ch;
     while( (ch = getchar()) != EOF ){
         if( isalpha(ch) ){
             ch = encode( toupper(ch), rotorSet );
-            showState( rotorSet );
         }
-        printf("%c\n", ch);
+        printf("%c", ch);
     }
 
     dropState( rotorSet );

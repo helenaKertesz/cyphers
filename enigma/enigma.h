@@ -12,3 +12,4 @@ char encodeBackwards( char  ch, State s, int rotor);
 void step( State s );
 void rotate( int rotor, State s);
 int isTip( int rotor, State s);
+void rotorName( State s, int rotor);

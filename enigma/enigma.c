@@ -6,6 +6,7 @@
 
 #define PRINTOUT 0
 #define ALPHALEN 26
+#define PRINT    1
 
 typedef struct stateRep {
     int numRotors;
@@ -15,6 +16,8 @@ typedef struct stateRep {
     //                        {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}};
 } state;
 
+
+//initialised the rotor selection and initala positions and returns a struct contaiing the information
 State setup( int argv, char * argc[]){
 
     if( !( (argv == 9 && atoi(argc[1]) == 3 ) || ( argv == 11 && atoi(argc[1]) == 4) ) ){
@@ -40,7 +43,7 @@ State setup( int argv, char * argc[]){
     }
     new->rotorState = rotorState;
     /*
-    //plugboard
+    //plugboard TODO
     if( PRINTOUT ) printf("Plugboard (y/n):");
     do
         scanf("%c", &ch);
@@ -51,22 +54,43 @@ State setup( int argv, char * argc[]){
 }
 
 
-void showState( State s ){
-    printf("\nUsing %d rotors\n", s->numRotors);
+//Prints out the state of the rotors
+void showState( State s )
+{
+    printf("\nUsing %d rotors\n\n   ", s->numRotors);
     int i;
     for(i = 0; i < numRot( s ); i++){
-        printf("|%c", s->rotorState[i]);
+        rotorName( s, s->rotorSelection[i]);
     }
-    printf("|\n\n");
+    printf("\n   ");
+    for(i = 0; i < numRot( s ); i++){
+        printf("+---");
+    }
+    printf("+\n");
+    int reflec = s->rotorSelection[numRot(s)];
+    if( reflec == 12 || reflec == 10){
+        printf(" b ");
+    } else {
+        printf(" c ");
+    }
+    for(i = 0; i < numRot( s ); i++){
+        printf("| %c ", s->rotorState[i]);
+    }
+    printf("|\n   ");
+    for(i = 0; i < numRot( s ); i++){
+        printf("+---");
+    }
+    printf("+\n\n");
 }
 
 
-char encode( char ch, State state ){
-
+//overall function for encoding a single character
+char encode( char ch, State state )
+{
     step( state );
 
     int i;
-    for( i = numRot( state ) - 1; i <= 0; i--){
+    for( i = numRot( state ) - 1; i >= 0; i--){
         ch = encodeForwards( ch, state, i);
     }
 
@@ -78,49 +102,63 @@ char encode( char ch, State state ){
     return ch;
 }
 
-int numRot( State state){
-    return( state->numRotors );
-}
 
-void dropState( State state ){
-    free( state->rotorSelection);
-    free( state->rotorState);
-    free( state );
-}
-
-char encodeForwards( char ch, State s, int rotor){
+//encoding forward to reflector
+char encodeForwards( char ch, State s, int rotor)
+{
     //from last rotor
-
-    if( rotor == s->numRotors) ch = (((ch + s->rotorState[rotor]) - 'A') % ALPHALEN ) + 'A';
-
-    ch = ch; //s->rotorState[i] - 'A' something
+    if( rotor == s->numRotors-1) ch = (((ch + (s->rotorState[rotor] - 'A')) - 'A' ) % ALPHALEN ) +'A';
+    else ch = (((ch + (s->rotorState[rotor] - s->rotorState[rotor+1]) + 'A' )) % ALPHALEN ) +'A';
+//    printf("\n[%c %c] %d \n", s->rotorState[rotor+1], s->rotorState[rotor], s->rotorState[rotor+1] - s->rotorState[rotor]);
+    if( PRINT) printf("->%c", ch);
     //wiring through rotor
-    ch = rotors[ s->rotorSelection[rotor] ][ ch - 'A'];
+    ch = rotors[ s->rotorSelection[rotor]-1 ][ ch - 'A'];
+    if( PRINT) printf("->*(%d)%c",rotor, ch);
     return ch;
 }
 
-char reflect( char ch, State s ){
 
+//encoding through the reflector
+char reflect( char ch, State s )
+{
     //from last rotor
-
+    //
+    ch = (((ch + (s->rotorState[0] - 'A')) - 'A' ) % ALPHALEN ) +'A';//CHECK!!!
+    if( PRINT) printf("->%c", ch);
+    //Through reflector
     ch = rotors[ s->rotorSelection[numRot(s)] ][ ch - 'A' ];
-
+    if( PRINT) printf("->||*%c||", ch);
     //to next rotor
+    ch = (abs(ch - s->rotorState[0] ) % ALPHALEN ) +'A';//CHECK!!!
+    if( PRINT) printf("->%c", ch);
     return ch;
 }
 
-char encodeBackwards( char  ch, State s, int rotor){
 
+//encoding back from the reflector
+char encodeBackwards( char  ch, State s, int rotor)
+{
     //wiring through rotor
-    ch = rotors[ s->rotorSelection[rotor] ][ ch - 'A'];
-
+    int i;
+    for(i = 0; i < ALPHALEN; i++){
+        if( ch == rotors[rotor][i]){
+            ch = i + 'A';
+            break;
+        }
+    }
+    if( PRINT) printf("->*(%d)%c",rotor, ch);
     //getting to next rotor
-    ch = ch; //s->rotorState[i] - 'A' something
+    if( rotor == s->numRotors-1) ch = (((ch - (s->rotorState[rotor] - 'A')) + 'A' ) % ALPHALEN ) +'A';
+    else ch = (((ch + (s->rotorState[rotor+1] - s->rotorState[rotor])) + 'A' ) % ALPHALEN ) +'A';
+    if( PRINT) printf("->%c", ch);
 
     return ch;
 }
 
-void step( State s ){
+
+//rototes the rotors
+void step( State s )
+{
     int nR = s->numRotors;
     if( nR == 4 ){
         if( isTip( nR-3, s) &&  isTip( nR-2, s) &&  isTip( nR-1, s) ){
@@ -139,10 +177,12 @@ void step( State s ){
         rotate( nR-1, s);
     } else {
         rotate( nR-1, s);
-        printf("rotated %d\n", nR-1);
     }
 }
 
+
+//returns 1 if the rotor will catch the next rotor when it next rotates
+//and 0 otherwise
 int isTip( int rotor, State s)
 {
     int state = 0;
@@ -151,7 +191,72 @@ int isTip( int rotor, State s)
     return state;
 }
 
+
+//rotates the rotors by updating the rotor state
 void rotate( int rotor, State s){
     if(s->rotorState[rotor] == 'Z') s->rotorState[rotor] = 'A';
     else s->rotorState[rotor]++;
+}
+
+
+//returns the number of rotors in use
+int numRot( State state)
+{
+    return( state->numRotors );
+}
+
+
+//free memory associated with state
+void dropState( State state )
+{
+    free( state->rotorSelection);
+    free( state->rotorState);
+    free( state );
+}
+
+void rotorName( State s, int rotor)
+{
+   /* switch (rotor){
+      case 0:
+      printf("  I ");
+      break;
+case: 1;
+      printf(" II ");
+      break;
+case: 2;
+      printf(" III");
+      break;
+case: 3;
+      printf(" IV ");
+      break;
+case: 4;
+      printf("  V ");
+      break;
+case: 5;
+      printf(" VI ");
+      break;
+case: 6;
+      printf(" VII");
+      break;
+case: 7;
+      printf("VIII");
+      break;
+    }*/
+    if( rotor == 1){
+        printf("  I ");
+    } else if( rotor == 2 ){
+        printf(" II ");
+    } else if( rotor == 3 ){
+        printf(" III");
+    } else if( rotor == 4 ){
+        printf(" IV ");
+    } else if( rotor == 5 ){
+        printf("  V ");
+    } else if( rotor == 6 ){
+        printf(" VI ");
+    } else if( rotor == 7 ){
+        printf(" VII");
+    } else if( rotor == 8 ){
+        printf("VIII");
+    }
 }
